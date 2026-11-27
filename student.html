@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>🎓 Student Dashboard</h2>
+
+    <button class="action-btn" onclick="loadCourses()">View All Courses</button>
+    <div id="courses"></div>
+
+    <button class="action-btn" onclick="loadEnrollments()">My Enrollments</button>
+    <div id="enrollments"></div>
+
+    <button class="action-btn" onclick="loadAssignments()">My Assignments</button>
+    <div id="assignments"></div>
+
+    <button class="action-btn" onclick="loadGrades()">My Grades</button>
+    <div id="grades"></div>
+</div>
+
+<script>
+    let student_id = localStorage.getItem("user_id");
+
+    /* COURSES */
+    function loadCourses() {
+        fetch("http://127.0.0.1:5000/courses")
+        .then(res => res.json())
+        .then(data => {
+            let out = "";
+            data.forEach(c => {
+                out += `
+                    <div class="card">
+                        <strong>${c.course_name}</strong> (${c.department} — ${c.credits} credits)
+                        <button class="inline-btn" onclick="enroll(${c.course_id})">Enroll</button>
+                    </div>
+                `;
+            });
+            document.getElementById("courses").innerHTML = out || "<div class='card'>No courses available.</div>";
+        })
+        .catch(err => alert("Error loading courses: " + err));
+    }
+
+    /* ENROLL */
+    function enroll(course_id) {
+        fetch("http://127.0.0.1:5000/enroll", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                student_id: student_id,
+                course_id: course_id
+            })
+        })
+        .then(res => res.json())
+        .then(data => alert(data.message))
+        .catch(err => alert("Error: " + err));
+    }
+
+    /* ENROLLMENTS */
+    function loadEnrollments() {
+        fetch(`http://127.0.0.1:5000/enrollments/${student_id}`)
+        .then(res => res.json())
+        .then(data => {
+            let out = "";
+            data.forEach(e => {
+                out += `<div class="card">${e.course_name}</div>`;
+            });
+            document.getElementById("enrollments").innerHTML = out || "<div class='card'>No enrollments yet.</div>";
+        })
+        .catch(err => alert("Error: " + err));
+    }
+
+    /* ASSIGNMENTS */
+    function loadAssignments() {
+        fetch(`http://127.0.0.1:5000/assignments/${student_id}`)
+        .then(res => res.json())
+        .then(data => {
+            let out = "";
+            data.forEach(a => {
+                // ✅ FIX: Was `a.marks` — backend returns `a.total_marks`
+                // Also format the due_date properly (backend returns ISO string)
+                let dueDate = a.due_date ? new Date(a.due_date).toLocaleDateString() : "N/A";
+                out += `
+                    <div class="card">
+                        <strong>${a.title}</strong><br>
+                        Due: ${dueDate}<br>
+                        Total Marks: ${a.total_marks}
+                    </div>
+                `;
+            });
+            document.getElementById("assignments").innerHTML = out || "<div class='card'>No assignments yet.</div>";
+        })
+        .catch(err => alert("Error: " + err));
+    }
+
+    /* GRADES */
+    function loadGrades() {
+        fetch(`http://127.0.0.1:5000/grades/${student_id}`)
+        .then(res => res.json())
+        .then(data => {
+            let out = "";
+            if (data.length === 0) {
+                out = "<div class='card'>No grades available yet.</div>";
+            } else {
+                data.forEach(g => {
+                    out += `
+                        <div class="card">
+                            <strong>${g.course_name}</strong> — Grade: ${g.grade}
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById("grades").innerHTML = out;
+        })
+        .catch(err => alert("Error: " + err));
+    }
+</script>
+
+</body>
+</html>

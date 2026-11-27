@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Faculty Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>👨‍🏫 Faculty Dashboard</h2>
+
+    <!-- ADD COURSE -->
+    <div class="card">
+        <h3>➕ Add Course</h3>
+        <input id="cname" placeholder="Course Name">
+        <button class="action-btn" onclick="addCourse()">Add Course</button>
+    </div>
+
+    <!-- VIEW MY COURSES -->
+    <div class="card">
+        <h3>📚 My Courses</h3>
+        <button class="action-btn" onclick="loadMyCourses()">View My Courses</button>
+        <div id="my_courses"></div>
+    </div>
+
+    <!-- ADD ASSIGNMENT -->
+    <div class="card">
+        <h3>📝 Add Assignment</h3>
+        <input id="course_id" placeholder="Course ID">
+        <input id="title" placeholder="Assignment Title">
+        <input id="due" type="date">
+        <button class="action-btn" onclick="addAssignment()">Add Assignment</button>
+    </div>
+
+    <!-- VIEW MY ASSIGNMENTS -->
+    <div class="card">
+        <h3>📋 My Assignments</h3>
+        <button class="action-btn" onclick="loadMyAssignments()">View My Assignments</button>
+        <div id="my_assignments"></div>
+    </div>
+
+    <!-- ENTER GRADES -->
+    <div class="card">
+        <h3>🎯 Enter Grades</h3>
+        <input id="student_id" placeholder="Student ID">
+        <input id="course_id_g" placeholder="Course ID">
+        <input id="grade" placeholder="Grade (e.g. A, B+)">
+        <button class="action-btn" onclick="addGrade()">Submit Grade</button>
+    </div>
+
+    <!-- VIEW GRADES GIVEN -->
+    <div class="card">
+        <h3>📊 Grades Given</h3>
+        <button class="action-btn" onclick="loadGradesGiven()">View Grades Given</button>
+        <div id="grades_given"></div>
+    </div>
+
+</div>
+
+<script>
+    let faculty_id = localStorage.getItem("user_id");
+
+    /* ADD COURSE */
+    function addCourse() {
+        let cname = document.getElementById("cname").value;
+        if (!cname) { alert("Please enter a course name."); return; }
+
+        fetch("http://127.0.0.1:5000/add_course", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ course_name: cname, faculty_id: faculty_id })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            loadMyCourses(); // auto refresh
+        })
+        .catch(err => alert("Error: " + err));
+    }
+
+    /* VIEW MY COURSES */
+    function loadMyCourses() {
+        fetch(`http://127.0.0.1:5000/faculty_courses/${faculty_id}`)
+        .then(res => res.json())
+        .then(data => {
+            let out = "";
+            if (data.length === 0) {
+                out = "<p style='color:#888;margin-top:10px'>No courses added yet.</p>";
+            } else {
+                data.forEach(c => {
+                    out += `
+                        <div style="padding:10px;margin-top:8px;background:#f1f8e9;border-radius:12px;">
+                            <strong>${c.course_name}</strong>
+                            &nbsp;|&nbsp; Dept: ${c.department}
+                            &nbsp;|&nbsp; Credits: ${c.credits}
+                            &nbsp;|&nbsp; ID: <code>${c.course_id}</code>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById("my_courses").innerHTML = out;
+        })
+        .catch(err => alert("Error: " + err));
+    }
+
+    /* ADD ASSIGNMENT */
+    function addAssignment() {
+        let course_id = document.getElementById("course_id").value;
+        let title = document.getElementById("title").value;
+        let due = document.getElementById("due").value;
+        if (!course_id || !title || !due) { alert("Please fill in all fields."); return; }
+
+        fetch("http://127.0.0.1:5000/add_assignment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ course_id: course_id, title: title, due_date: due })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            loadMyAssignments(); // auto refresh
+        })
+        .catch(err => alert("Error: " + err));
+    }
+
+    /* VIEW MY ASSIGNMENTS */
+    function loadMyAssignments() {
+        fetch(`http://127.0.0.1:5000/faculty_assignments/${faculty_id}`)
+        .then(res => res.json())
+        .then(data => {
+            let out = "";
+            if (data.length === 0) {
+                out = "<p style='color:#888;margin-top:10px'>No assignments posted yet.</p>";
+            } else {
+                data.forEach(a => {
+                    let dueDate = a.due_date ? new Date(a.due_date).toLocaleDateString() : "N/A";
+                    out += `
+                        <div style="padding:10px;margin-top:8px;background:#f1f8e9;border-radius:12px;">
+                            <strong>${a.title}</strong>
+                            &nbsp;|&nbsp; Course: ${a.course_name}
+                            &nbsp;|&nbsp; Due: ${dueDate}
+                            &nbsp;|&nbsp; Marks: ${a.total_marks}
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById("my_assignments").innerHTML = out;
+        })
+        .catch(err => alert("Error: " + err));
+    }
+
+    /* ADD GRADE */
+    function addGrade() {
+        let student_id = document.getElementById("student_id").value;
+        let course_id = document.getElementById("course_id_g").value;
+        let grade = document.getElementById("grade").value;
+        if (!student_id || !course_id || !grade) { alert("Please fill in all fields."); return; }
+
+        fetch("http://127.0.0.1:5000/add_grade", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ student_id: student_id, course_id: course_id, grade: grade })
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            loadGradesGiven(); // auto refresh
+        })
+        .catch(err => alert("Error: " + err));
+    }
+
+    /* VIEW GRADES GIVEN */
+    function loadGradesGiven() {
+        fetch(`http://127.0.0.1:5000/faculty_grades/${faculty_id}`)
+        .then(res => res.json())
+        .then(data => {
+            let out = "";
+            if (data.length === 0) {
+                out = "<p style='color:#888;margin-top:10px'>No grades submitted yet.</p>";
+            } else {
+                data.forEach(g => {
+                    out += `
+                        <div style="padding:10px;margin-top:8px;background:#f1f8e9;border-radius:12px;">
+                            <strong>Student:</strong> ${g.student_name}
+                            &nbsp;|&nbsp; Course: ${g.course_name}
+                            &nbsp;|&nbsp; Grade: <strong>${g.grade}</strong>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById("grades_given").innerHTML = out;
+        })
+        .catch(err => alert("Error: " + err));
+    }
+</script>
+
+</body>
+</html>

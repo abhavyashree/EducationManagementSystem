@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EMS Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="page">
+    <div class="login-box">
+
+        <h1>🎓 EMS Portal</h1>
+        <p class="subtitle">Create a new account</p>
+
+        <!-- USER TYPE TOGGLE -->
+        <div class="user-toggle">
+            <button class="active" onclick="selectUser('student', this)">Student</button>
+            <button onclick="selectUser('faculty', this)">Faculty</button>
+        </div>
+
+        <input type="hidden" id="userType" value="student">
+
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Create Password">
+        <input type="password" id="confirm_password" placeholder="Confirm Password">
+
+        <button class="login-btn" onclick="register()">Register</button>
+
+        <p id="message"></p>
+
+        <p style="margin-top: 15px; font-size: 14px; color: #555;">
+            Already have an account?
+            <a href="index.html" style="color: #2e7d32; font-weight: bold;">Login here</a>
+        </p>
+
+    </div>
+</div>
+
+<script>
+    function selectUser(type, btn) {
+        document.getElementById("userType").value = type;
+        let buttons = document.querySelectorAll(".user-toggle button");
+        buttons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+    }
+
+    function register() {
+        let userType = document.getElementById("userType").value;
+        let name = document.getElementById("name").value.trim();
+        let email = document.getElementById("email").value.trim();
+        let password = document.getElementById("password").value;
+        let confirm_password = document.getElementById("confirm_password").value;
+        let message = document.getElementById("message");
+
+        if (!name || !email || !password || !confirm_password) {
+            message.style.color = "red";
+            message.innerText = "Please fill in all fields.";
+            return;
+        }
+
+        if (password !== confirm_password) {
+            message.style.color = "red";
+            message.innerText = "Passwords do not match.";
+            return;
+        }
+
+        if (password.length < 4) {
+            message.style.color = "red";
+            message.innerText = "Password must be at least 4 characters.";
+            return;
+        }
+
+        fetch("http://127.0.0.1:5000/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password, userType })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                message.style.color = "green";
+                message.innerText = `${userType === "student" ? "Student" : "Faculty"} account created! Redirecting to login...`;
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 1500);
+            } else {
+                message.style.color = "red";
+                message.innerText = data.message;
+            }
+        })
+        .catch(err => {
+            message.style.color = "red";
+            message.innerText = "Could not connect to server.";
+        });
+    }
+</script>
+
+</body>
+</html>

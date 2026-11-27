@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EMS Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="page">
+
+    <div class="login-box">
+
+        <h1>🎓 EMS Portal</h1>
+        <p class="subtitle">Login to continue</p>
+
+        <!-- USER TYPE TOGGLE -->
+        <div class="user-toggle">
+            <button class="active" onclick="selectUser('student', this)">Student</button>
+            <button onclick="selectUser('faculty', this)">Faculty</button>
+        </div>
+
+        <input type="hidden" id="userType" value="student">
+
+        <input type="text" id="email" placeholder="Enter Email">
+        <input type="password" id="password" placeholder="Enter Password">
+
+        <button class="login-btn" onclick="login()">Login</button>
+
+        <p id="message"></p>
+
+        <!-- ✅ NEW: Register link for new students -->
+        <p style="margin-top: 15px; font-size: 14px; color: #555;">
+            New student? 
+            <a href="register.html" style="color: #2e7d32; font-weight: bold;">Register here</a>
+        </p>
+
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
